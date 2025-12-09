@@ -119,14 +119,45 @@ export function downloadImage(dataUrl: string, filename: string): void {
 
 /**
  * Copy image to clipboard
+ * Converts data URL to canvas then to PNG blob for better compatibility
  */
 export async function copyToClipboard(dataUrl: string): Promise<void> {
   if (!navigator.clipboard || !window.ClipboardItem) {
     throw new Error("Clipboard API not supported");
   }
 
-  const response = await fetch(dataUrl);
-  const blob = await response.blob();
+  try {
+    // Load the data URL as an image
+    const img = await loadImage(dataUrl);
 
-  await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    // Create a canvas and draw the image
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('Cannot get canvas context');
+    }
+
+    ctx.drawImage(img, 0, 0);
+
+    // Convert canvas to PNG blob
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Failed to create blob'));
+        }
+      }, 'image/png');
+    });
+
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+  } catch (err) {
+    console.error('Clipboard copy error:', err);
+    throw new Error('Failed to copy image to clipboard');
+  }
 }
