@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { UploadSection } from "./UploadSection";
 import { CompositionCanvas } from "./CompositionCanvas";
 import { ActionButtons } from "./ActionButtons";
@@ -8,7 +8,6 @@ const BACKGROUND_IMAGE_URL = "/bg.jpg";
 export function ImageComposer() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [inputText, setInputText] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [composedImageUrl, setComposedImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +22,6 @@ export function ImageComposer() {
     let isMounted = true;
 
     const performComposition = async () => {
-      setIsProcessing(true);
       setError(null);
 
       try {
@@ -42,10 +40,6 @@ export function ImageComposer() {
             err instanceof Error ? err.message : "Image composition failed";
           setError(errorMessage);
           setComposedImageUrl(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsProcessing(false);
         }
       }
     };
